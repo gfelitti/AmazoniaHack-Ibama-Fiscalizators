@@ -76,6 +76,7 @@ DATABASE_URL=postgres://user:password@db_address:port/db_name
 AWS_ACCESS_KEY_ID=your_access_key_id
 AWS_SECRET_ACCESS_KEY=your_secret_access_key
 S3_BUCKET=your_bucket_name
+PROMPT_VISION=prompt_to_use_with_LLM
 ```
 
 ### Running the Application

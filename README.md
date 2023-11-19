@@ -27,5 +27,5 @@ Follow these steps to set up your development environment and run the project lo
 Clone the repository to your local machine using `git`:
 
 ```bash
-git clone https://github.com/your-username/your-project.git
-cd your-project
+git clone [https://github.com/gfelitti/AmazoniaHack-Ibama-Fiscalizators](https://github.com/gfelitti/AmazoniaHack-Ibama-Fiscalizators.git)
+cd AmazoniaHack-Ibama-Fiscalizators

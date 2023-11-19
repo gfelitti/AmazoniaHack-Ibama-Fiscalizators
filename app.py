@@ -1,0 +1,149 @@
+from flask import Flask, request, render_template, redirect, url_for, jsonify
+from sqlalchemy import distinct
+from flask_sqlalchemy import SQLAlchemy
+import os
+import datetime
+from datetime import date, time, datetime
+from werkzeug.utils import secure_filename
+import boto3
+from botocore.exceptions import NoCredentialsError
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+app = Flask(__name__)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:fiscalizators@amazoniahack.c0tib0flrny7.us-west-2.rds.amazonaws.com:5432/postgres'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///images.db'
+#app.config['UPLOAD_FOLDER'] = '/Users/guilhermefelitti/Dropbox/Novelo/codigos/Novelo/hackaton/static/uploads'
+db = SQLAlchemy(app)
+
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+S3_BUCKET = os.getenv("S3_BUCKET")
+S3_KEY_PREFIX = os.getenv("S3_KEY_PREFIX", "")
+
+s3_client = boto3.client(
+    's3',
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+)
+
+class Image(db.Model):
+    __tablename__ = 'images'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    file_url = db.Column(db.Text, nullable=False)
+    upload_date = db.Column(db.Date, default=date.today)
+    upload_time = db.Column(db.Time, default=time)
+    picture_date = db.Column(db.Date)
+    picture_time = db.Column(db.Time)
+    coordinates_dms = db.Column(db.String(255))
+    description = db.Column(db.Text)
+
+    def __init__(self, filename, file_url, upload_date, upload_time, 
+                 picture_date=None, picture_time=None, coordinates_dms=None, description=None):
+        self.filename = filename
+        self.file_url = file_url
+        self.upload_date = upload_date
+        self.upload_time = upload_time
+        self.picture_date = picture_date
+        self.picture_time = picture_time
+        self.coordinates_dms = coordinates_dms
+        self.description = description
+
+    def __repr__(self):
+        return f'<Image {self.filename}>'
+    
+    
+@app.route('/')
+def home():
+    return render_template('home.html')
+
+@app.route('/upload', methods=['POST'])
+def upload_files():
+    uploaded_files = request.files.getlist('files')
+    successful_uploads = 0
+
+    for file in uploaded_files:
+        if file and file.filename:
+            filename = secure_filename(file.filename)
+            file_key = f"{S3_KEY_PREFIX}/{filename}" if S3_KEY_PREFIX else filename
+            try:
+                s3_client.upload_fileobj(
+                    file,
+                    S3_BUCKET,
+                    file_key
+                )
+                
+                new_image = Image(filename=filename, 
+                                  file_url= f"https://{S3_BUCKET}.s3.amazonaws.com/{file_key}"
+, 
+                                  upload_date=date.today(), 
+                                  upload_time=datetime.datetime.now().time())
+                db.session.add(new_image)
+                db.session.commit()
+                successful_uploads += 1
+            except Exception as e:
+                # Log the error
+                print(f"Failed to upload {filename}: {e}")
+    return render_template('upload_success.html', num_files=successful_uploads)
+
+
+@app.route('/gallery')
+def gallery():
+    try:
+        bucket_contents = s3_client.list_objects_v2(Bucket=S3_BUCKET, Prefix=S3_KEY_PREFIX)
+        images = []
+        for obj in bucket_contents.get('Contents', []):
+            if obj['Key'].lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                #image_url = f"https://{S3_BUCKET}.s3.amazonaws.com/{obj['Key']}"
+                #images.append({'key': obj['Key'], 'url': image_url})
+                presigned_url = s3_client.generate_presigned_url('get_object', Params={'Bucket': S3_BUCKET, 'Key': obj['Key']}, ExpiresIn=3600)
+                images.append({'key': obj['Key'], 'url': presigned_url})
+    except NoCredentialsError:
+        images = []
+        print("No credentials to access S3")
+
+    return render_template('gallery.html', images=images)
+    
+
+@app.route('/photos')
+def get_photos():
+    # Parâmetro de data do query string
+    date_str = request.args.get('upload_date')  # Formato esperado: 'YYYY-MM-DD'
+
+    try:
+        if date_str:
+            upload_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            photos = Image.query.filter_by(upload_date=upload_date).all()
+        else:
+            photos = Image.query.all()
+    except ValueError:
+        return jsonify({'error': 'Not valid date. Use the format YYYY-MM-DD'}), 400
+
+    photos_data = [{
+        'id': photo.id,
+        'filename': photo.filename,
+        'file_url': photo.file_url,
+        'upload_date': photo.upload_date.isoformat() if photo.upload_date else None,
+        'upload_time': photo.upload_time.isoformat() if photo.upload_time else None,
+        'picture_date': photo.picture_date.isoformat() if photo.picture_date else None,
+        'picture_time': photo.picture_time.isoformat() if photo.picture_time else None,
+        'coordinates_dms': photo.coordinates_dms,
+        'description': photo.description
+    } for photo in photos]
+
+    return jsonify(photos_data)
+
+
+with app.app_context():
+    db.create_all()
+    
+if __name__ == '__main__':
+    
+    app.run(debug=True)

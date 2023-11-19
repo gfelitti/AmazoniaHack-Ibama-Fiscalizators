@@ -14,11 +14,10 @@ load_dotenv()
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:fiscalizators@amazoniahack.c0tib0flrny7.us-west-2.rds.amazonaws.com:5432/postgres'
+PSQL_URI = os.getenv("PSQL_URI")
+app.config['SQLALCHEMY_DATABASE_URI'] = PSQL_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///images.db'
-#app.config['UPLOAD_FOLDER'] = '/Users/guilhermefelitti/Dropbox/Novelo/codigos/Novelo/hackaton/static/uploads'
 db = SQLAlchemy(app)
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
@@ -89,7 +88,6 @@ def upload_files():
                 db.session.commit()
                 successful_uploads += 1
             except Exception as e:
-                # Log the error
                 print(f"Failed to upload {filename}: {e}")
     return render_template('upload_success.html', num_files=successful_uploads)
 
@@ -114,7 +112,6 @@ def gallery():
 
 @app.route('/photos')
 def get_photos():
-    # Parâmetro de data do query string
     date_str = request.args.get('upload_date')  # Formato esperado: 'YYYY-MM-DD'
 
     try:

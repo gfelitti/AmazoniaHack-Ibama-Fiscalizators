@@ -2,7 +2,8 @@
 
 Using Flask, PSQL and JavaScript, the project give a interface to upload and process images took during Ibama's operations and visualize them on a interactive map.
 
-Group: Alexandria Baraza, Guilherme Felitti, Marcela Jimenez, Sermírian Amôedo and Sihan Zhang
+** Group ** : Alexandria Baraza, Guilherme Felitti, Marcela Jimenez, Sermírian Amôedo and Sihan Zhang
+
 Map from [Sihan Zhang's repository](https://github.com/SihanZhang98/amazonia-hack)
 
 ### Challenge Statement

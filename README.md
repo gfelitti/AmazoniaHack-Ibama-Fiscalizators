@@ -29,3 +29,52 @@ Clone the repository to your local machine using `git`:
 ```bash
 git clone https://github.com/gfelitti/AmazoniaHack-Ibama-Fiscalizators.git
 cd AmazoniaHack-Ibama-Fiscalizators
+
+
+### Setting Up pyenv and Creating a Virtual Environment
+
+If not already installed, install the desired Python version using pyenv:
+
+
+```bash
+pyenv install 3.9.1  # Replace with your preferred Python version
+
+Create a virtual environment for the project (if using pyenv-virtualenv):
+
+bash
+
+pyenv virtualenv 3.9.1 your_project-env
+
+### Activate the virtual environment:
+
+```bash
+pyenv activate your_project-env
+
+### Installing Dependencies
+
+Install the project dependencies using pip:
+
+```bash
+pip install -r requirements.txt
+
+### Configuring Environment Variables
+
+Rename the .envexample file to .env at the project root and insert your environment variables, such as API keys, database connection strings, etc.
+
+```bash
+FLASK_APP=app.py
+FLASK_ENV=development
+SECRET_KEY=your_secret_key
+DATABASE_URL=postgres://user:password@db_address:port/db_name
+AWS_ACCESS_KEY_ID=your_access_key_id
+AWS_SECRET_ACCESS_KEY=your_secret_access_key
+S3_BUCKET=your_bucket_name
+
+### Running the Application
+
+With everything set up, you can start the Flask server locally:
+
+```bash
+flask run
+
+The application will be available at http://localhost:5000.

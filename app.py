@@ -9,6 +9,9 @@ import boto3
 from botocore.exceptions import NoCredentialsError
 from dotenv import load_dotenv
 import os
+import base64
+import requests
+import json
 
 load_dotenv()
 
@@ -24,6 +27,19 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 S3_BUCKET = os.getenv("S3_BUCKET")
 S3_KEY_PREFIX = os.getenv("S3_KEY_PREFIX", "")
+OPENAI_KEY=os.getenv("OPENAI_KEY")
+PROMPT_VISION=os.getenv("PROMPT_VISION")
+
+def encode_image(file_storage):
+    file_stream = file_storage.stream
+    file_stream.seek(0)
+    return base64.b64encode(file_stream.read()).decode('utf-8')
+
+headers_CV = {
+  "Content-Type": "application/json",
+  "Authorization": f"Bearer {OPENAI_KEY}"
+}
+
 
 s3_client = boto3.client(
     's3',
@@ -72,18 +88,47 @@ def upload_files():
         if file and file.filename:
             filename = secure_filename(file.filename)
             file_key = f"{S3_KEY_PREFIX}/{filename}" if S3_KEY_PREFIX else filename
+            
+            #implementar openai
+            image_base64 = encode_image(file)
+            payload_CV = {
+                    "model": "gpt-4-vision-preview",
+                    "messages": [
+                        {
+                        "role": "user",
+                            "content": [
+                                {
+                            "type": "text",
+                            "text": PROMPT_VISION
+                                },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                "url": f"data:image/jpeg;base64,{image_base64}"
+                            }}]}],    "max_tokens": 300}
+            response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers_CV, json=payload_CV)
+            a=response.json()
+            b=a['choices'][0]['message']['content']
             try:
+                c=json.loads(b)
+            except json.decoder.JSONDecodeError:
+                c={'coordinates_DMS': None, 'date_picture': None, 'time_picture': None}
+            
+            try:
+                file.stream.seek(0)
                 s3_client.upload_fileobj(
                     file,
                     S3_BUCKET,
                     file_key
-                )
-                
+                )   
                 new_image = Image(filename=filename, 
                                   file_url= f"https://{S3_BUCKET}.s3.amazonaws.com/{file_key}"
 , 
                                   upload_date=date.today(), 
-                                  upload_time=datetime.datetime.now().time())
+                                  upload_time=datetime.now().time(),
+                                  picture_date=c['date_picture'],
+                                  picture_time=c['time_picture'],
+                                  coordinates_dms=c['coordinates_DMS'])
                 db.session.add(new_image)
                 db.session.commit()
                 successful_uploads += 1
@@ -137,6 +182,9 @@ def get_photos():
 
     return jsonify(photos_data)
 
+@app.route('/map')
+def mapview():
+    return render_template('map.html')
 
 with app.app_context():
     db.create_all()

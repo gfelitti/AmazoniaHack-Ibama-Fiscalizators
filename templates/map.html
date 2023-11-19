@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AmazoniaHack - Fiscalizators! - Map</title>
+    <!-- Incluir o CSS do Leaflet -->
+    
+      <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
+      <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""></script>
+      <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+    <style>
+        .container {
+            margin-top: 50px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        #map { height: 400px; }
+    </style>
+</head>
+<body>
+
+<!-- Barra de Navegação -->
+<div class="container">
+    <h2 class="mb-4">Map</h2>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+    <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+            <a class="nav-link" href="/">Home</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/gallery">Gallery</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/map">Map</a>
+        </li>
+    </ul>
+</nav>
+</div>
+<!-- Div para o Mapa do Leaflet -->
+<div id="map" style="height: 400px; width: 100%;"></div>
+
+<!-- Incluir o JavaScript do Leaflet -->
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+    integrity="sha512-gZQJNK98bU0zCtP/Q1R8yyLYppcVXS+7ZzufBIsjA4Ewv/Xz4s8lRJBt+0tmH4RUQbAXL1TH+r34jKbc4FlLQ=="
+    crossorigin=""></script>
+
+<!-- Script para Inicializar o Mapa do Leaflet -->
+<input type='file' id="UploadFile" accept=".csv">
+<button id="uploadsuccess">file uploaded</button>
+<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+
+</body>
+</html>

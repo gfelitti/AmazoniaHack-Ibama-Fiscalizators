@@ -89,3 +89,8 @@ With everything set up, you can start the Flask server locally:
 flask run
 ```
 The application will be available at http://localhost:5000.
+
+
+## TO DO
+- Deploy the webapp on the cloud (not just the S3 bucket and the RDS)
+- Connect the map with the photos API

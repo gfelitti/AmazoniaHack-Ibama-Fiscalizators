@@ -12,11 +12,18 @@ import os
 import base64
 import requests
 import json
+import logging
 
 load_dotenv()
 
 app = Flask(__name__)
 
+if not app.debug:
+    logHandler = logging.FileHandler('flask-app.log')
+    logHandler.setLevel(logging.INFO)
+    app.logger.addHandler(logHandler)
+    app.logger.setLevel(logging.INFO)
+    
 PSQL_URI = os.getenv("PSQL_URI")
 app.config['SQLALCHEMY_DATABASE_URI'] = PSQL_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

@@ -19,11 +19,15 @@ load_dotenv()
 app = Flask(__name__)
 
 if not app.debug:
-    logHandler = logging.FileHandler('flask-app.log')
+    # Configura o logging para escrever em um arquivo, com mensagens de nível INFO ou superior
+    logHandler = logging.FileHandler('/var/log/flask-app.log')  # Especifica o caminho absoluto do arquivo de log
     logHandler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
+    logHandler.setFormatter(formatter)
     app.logger.addHandler(logHandler)
     app.logger.setLevel(logging.INFO)
-    
+
+
 PSQL_URI = os.getenv("PSQL_URI")
 app.config['SQLALCHEMY_DATABASE_URI'] = PSQL_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
